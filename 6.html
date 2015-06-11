@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Document</title>
+</head>
+<body>
+	<canvas id="canvas1" width="1000" height="300">
+		
+	</canvas>
+	<script>
+	var canvas = document.getElementById('canvas1');
+	var ctx = canvas.getContext('2d');
+	var width = canvas.width;
+	var height = canvas.height;
+
+	var per = Math.PI/180;
+	var start = 0;
+	var end = 0;
+	var x = 30;
+	var y = 30;
+	var radius = 20;
+	var perAngle = 24;
+	var tt;
+	var sum =0;
+	var color = '#'+('00000'+(Math.random()*0x1000000<<0).toString(16)).slice(-6);
+
+	function round(){
+		tt = setTimeout(function(){
+			start = end;
+			end += perAngle *per;
+			if(end > 360 * per){
+				radius = Math.round( Math.random() * 40+10);
+				x = Math.round(Math.random() * (width-radius*2)+radius);
+				y = Math.round(Math.random() * (height-radius*2)+radius);
+				start = 0;
+				end = 0;
+				sum++;
+				color = '#'+('00000'+(Math.random()*0x1000000<<0).toString(16)).slice(-6);
+				if(sum > 100){
+					alert(1);
+					return false;
+				}
+			}
+			drawCircle(ctx,x,y,radius,start,end);	
+			round();
+		},1000 / perAngle);
+	}
+
+	function drawCircle(ctx,x,y,radius,start,end){
+		ctx.beginPath();
+		ctx.arc(x,y,radius,start,end,false);
+		ctx.strokeStyle = color;
+		ctx.stroke();
+		console.log(1);
+	}
+
+	round();
+	</script>
+</body>
+</html>
