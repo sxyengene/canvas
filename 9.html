@@ -1,0 +1,62 @@
+<html>
+ <head>
+ <style type="text/css">
+ #canvas{
+ 	border:1px solid #000;
+ }
+ </style>
+  <script type="application/x-javascript">
+function draw() {
+  var canvas = document.getElementById("canvas");
+  if (canvas.getContext){
+    var ctx = canvas.getContext('2d')
+    var lie = 20;
+    var heng = 30;
+    var currentX,currentY;
+    var board = [];
+    var blocks = [
+      [0,0,0,0,1,1,1,1]//横杠
+      ,[0,0,0,0,0,1,1,0,0,1,1]//方块
+      ,[0,0,0,0,0,0,0,1,1,1,1]//右耳
+      ,[0,0,0,0,0,1,0,0,1,1,1]//土
+      ,[0,0,0,0,1,0,0,0,1,1,1]//左耳
+      ,[0,0,0,0,1,1,0,0,0,1,1]
+      ,[0,0,0,0,0,1,1,0,1,1]
+    ];
+
+    //画方块
+    function drawBlock(x,y){
+
+    }
+
+    for(var i = 0;i<4;i++){
+      for (var j = 0; j <4; j++) {
+        ctx.strokeRect(i*10,j*10,10,10)
+      };
+    }
+
+    function block(){
+      var arr = [];
+      arr = blocks[0];
+      for(var i = 0;i<4;i++){
+        for (var j = 0; j <4; j++) {
+          
+        };
+      }    
+    }
+
+    
+    block();
+
+
+
+
+
+  }
+}
+  </script>
+ </head>
+ <body onload="draw();">
+   <canvas id="canvas" width="200" height="600"></canvas>
+ </body>
+</html>
