@@ -1,0 +1,105 @@
+<html>
+ <head>
+ <style type="text/css">
+ #canvas{
+ 	border:1px solid #000;
+  margin-left: 200px;
+ }
+ </style>
+ <script src="jquery.js"></script>
+ </head>
+ <body >
+   <canvas id="canvas" width="200" height="600"></canvas>
+   <style>
+   div{
+    width: 50px;
+    height: 50px;
+    
+   }
+  .up{
+    position: absolute;
+    left: 50px;
+    top: 0;
+    background-color: red;
+  }.down{
+    position: absolute;
+    left: 50px;
+    top: 50px;
+    background: blue;
+  }.left{
+    position: absolute;
+    left: 0px;
+    top: 50px;
+    background: yellow;
+  }.right{
+    position: absolute;
+    left: 100px;
+    top: 50px;
+    background: black;
+  }
+   </style>
+   <div class="up"></div>
+   <div class="down"></div>
+   <div class="left"></div>
+   <div class="right"></div>
+
+   <script type="application/x-javascript">
+var points = [
+  [2,0],
+  [1,0],
+  [0,0]
+];
+var moves = ['addX','addX','addX'];
+var action = {
+    addX:function(arr){
+      return [++arr[0],arr[1]];
+    },
+    reduceX:function(arr){
+      return [--arr[0],arr[1]];
+    },
+    addY:function(arr){
+      return [arr[0],++arr[1]];
+    },
+    reduceY:function(arr){
+      return [arr[0],--arr[1]];
+    }
+}
+
+function round(){
+  for(var i = 0;i < points.length;i++){
+    points[i] = action[moves[i]](points[i]);
+  }
+}
+
+$('div').click(function(event) {
+  var ele = event.currentTarget;
+  moves.pop();
+  if($(ele).hasClass('up')){
+    moves.unshift('reduceY')
+  }else if($(ele).hasClass('down')){
+    moves.unshift('addY')
+  }else if($(ele).hasClass('left')){
+    moves.unshift('reduceX')
+  }else if($(ele).hasClass('right')){
+    moves.unshift('addX')
+  }else{
+  }
+  round();
+  draw();
+});
+
+var per=20;
+
+function draw(){
+  var canvas = document.getElementById("canvas");
+  if (canvas.getContext){
+    var ctx = canvas.getContext('2d');
+    ctx.clearRect(0,0,200,600);
+    for (var i = 0; i < points.length; i++) {
+      ctx.strokeRect(points[i][0]*per,points[i][1]*per,per,per);
+    }
+  }
+}
+  </script>
+ </body>
+</html>
