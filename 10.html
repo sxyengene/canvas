@@ -37,12 +37,26 @@
     top: 50px;
     background: black;
   }
+  .stop{
+    position: absolute;
+    left: 100px;
+    top: 250px;
+    background: red;
+  }
+  .start{
+    position: absolute;
+    left: 100px;
+    top: 200px;
+    background: green;
+  }
    </style>
    <div class="up"></div>
    <div class="down"></div>
    <div class="left"></div>
    <div class="right"></div>
-
+   <div class="stop">stop</div>
+   <div class="start">start</div>
+  
    <script type="application/x-javascript">
 var border = 29;//边界
 var broad = [border,border];
@@ -53,6 +67,9 @@ var points = [
 ];
 var moves = ['addX','addX','addX'];
 var candy = [[4,4]];
+
+var stopFlag = true;
+
 
 function makeCandy(){
   if(candy.length>5){
@@ -125,14 +142,15 @@ function round(){
   draw();
 
   tt = setTimeout(function(){
+    if(stopFlag){
+      return;
+    }
     round();
     if(tt % 5 ==0){
       makeCandy();
     }
   },300);
 }
-
-round();
 
 function movesF(){
   if(!eatCandy){//没吃糖
@@ -183,6 +201,13 @@ $('div').click(function(event) {
 $(document).keydown(function(e) {
   e=window.event||e;
   switch(e.which){
+    case 32: //暂停
+      if(stopFlag){
+        $('.start').trigger('click');
+      }else{
+        $('.stop').trigger('click');
+      }
+      break;
     case 37: //左键
       $('.left').trigger('click');
       break;
@@ -200,6 +225,16 @@ $(document).keydown(function(e) {
   }
 });
 
+$('.start').click(function(event) {
+  if(stopFlag){
+    round();
+    stopFlag = false;  
+  }
+});
+
+$('.stop').click(function(event) {
+  stopFlag = true;
+});
 
 function draw(){
   var canvas = document.getElementById("canvas");
