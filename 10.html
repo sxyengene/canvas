@@ -44,12 +44,43 @@
    <div class="right"></div>
 
    <script type="application/x-javascript">
+var border = 9;//边界
+var broad = [border,border];
 var points = [
-  [2,0],
-  [1,0],
-  [0,0]
+  [2,1],
+  [1,1],
+  [0,1]
 ];
 var moves = ['addX','addX','addX'];
+var candy = [[4,4]];
+
+function makeCandy(){
+  var x = Math.ceil(Math.random()*border);
+  var y = Math.ceil(Math.random()*border);
+  var canPushFlag = 1;
+  var arr = [x,y];
+  for (var i = 0; i < points.length; i++) {
+    if(points[i][0] == x && points[i][1] == y){
+      canPushFlag = 0;
+    }
+  }
+
+  if(canPushFlag){
+    candy.push([x,y]);
+  }
+}
+
+function isInCandy(arr){
+  var inCandy = false;
+   for (var i = 0; i < candy.length; i++) {
+    if(candy[i][0] == arr[0] && candy[i][1] == arr[1]){
+      inCandy = true;
+      candy.splice(i,1);
+    }
+  }
+  return inCandy;
+}
+
 var action = {
     addX:function(arr){
       return [++arr[0],arr[1]];
@@ -65,30 +96,110 @@ var action = {
     }
 }
 
+var nextMove = '';
+var moveFlag = 0;
+var per=20;
+var eatCandy = false;//是否吃糖
+
+
+var tt;
 function round(){
+  //到某一时刻的一瞬间，判断此时有效的行为。无特殊行为则复制上一行为。up,down,left,right
+  //然后移动snake
+  //判断，目标点 是否存在 candy 或者 禁区 或者本身
+  //如果是candy 则跳过pop一步。
+  movesF();
+  var lastarr = [points[points.length - 1][0],points[points.length - 1][1]];
   for(var i = 0;i < points.length;i++){
     points[i] = action[moves[i]](points[i]);
   }
+  if(isInCandy(points[0])){
+    eatCandy = true;//吃了一个糖
+  }
+  if(eatCandy){
+    points.push(lastarr);
+  }
+  draw();
+
+  tt = setTimeout(function(){
+    round();
+    if(tt % 5 ==0){
+      makeCandy();
+    }
+  },300);
 }
+
+// round();
+
+function movesF(){
+  if(!eatCandy){//没吃糖
+    moves.pop();
+  }else{//吃了糖
+    eatCandy = false;
+  }
+  if(moveFlag){
+    moves.unshift(nextMove);
+    moveFlag=0;
+  }else{
+    moves.unshift(moves[0]);
+  }
+}
+
+
+
+function validate(str){
+
+}
+
 
 $('div').click(function(event) {
   var ele = event.currentTarget;
-  moves.pop();
   if($(ele).hasClass('up')){
-    moves.unshift('reduceY')
+    if(moves[0] != 'addY'){
+      nextMove = 'reduceY';
+      moveFlag = 1;
+    }
   }else if($(ele).hasClass('down')){
-    moves.unshift('addY')
+    if(moves[0] != 'reduceY'){
+      nextMove = 'addY';
+      moveFlag = 1;
+    }
   }else if($(ele).hasClass('left')){
-    moves.unshift('reduceX')
+    if(moves[0] != 'addX'){
+      nextMove = 'reduceX';
+      moveFlag = 1;
+    }
   }else if($(ele).hasClass('right')){
-    moves.unshift('addX')
+    if(moves[0] != 'reduceX'){
+      nextMove = 'addX';
+      moveFlag = 1;
+    }
   }else{
+    moveFlag = 0;
   }
-  round();
-  draw();
+  // round();
 });
 
-var per=20;
+$(document).keydown(function(e) {
+  e=window.event||e;
+  switch(e.which){
+    case 37: //左键
+      $('.left').trigger('click');
+      break;
+    case 38: //向上键
+      $('.up').trigger('click');
+      break;
+    case 39: //右键
+      $('.right').trigger('click');
+      break;
+    case 40: //向下键
+      $('.down').trigger('click');
+      break;
+    default:
+      break;
+  }
+});
+
 
 function draw(){
   var canvas = document.getElementById("canvas");
@@ -96,10 +207,17 @@ function draw(){
     var ctx = canvas.getContext('2d');
     ctx.clearRect(0,0,200,600);
     for (var i = 0; i < points.length; i++) {
+      ctx.strokeStyle="#000000";
       ctx.strokeRect(points[i][0]*per,points[i][1]*per,per,per);
+    }
+    for (var i = 0; i < candy.length; i++) {
+      ctx.strokeStyle="#FF0000";
+      ctx.strokeRect(candy[i][0]*per,candy[i][1]*per,per,per);
     }
   }
 }
+
+
   </script>
  </body>
 </html>
