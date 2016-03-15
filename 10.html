@@ -9,7 +9,7 @@
  <script src="jquery.js"></script>
  </head>
  <body >
-   <canvas id="canvas" width="200" height="600"></canvas>
+   <canvas id="canvas" width="600" height="600"></canvas>
    <style>
    div{
     width: 50px;
@@ -44,7 +44,7 @@
    <div class="right"></div>
 
    <script type="application/x-javascript">
-var border = 9;//边界
+var border = 29;//边界
 var broad = [border,border];
 var points = [
   [2,1],
@@ -55,6 +55,9 @@ var moves = ['addX','addX','addX'];
 var candy = [[4,4]];
 
 function makeCandy(){
+  if(candy.length>5){
+    return;
+  }
   var x = Math.ceil(Math.random()*border);
   var y = Math.ceil(Math.random()*border);
   var canPushFlag = 1;
@@ -129,7 +132,7 @@ function round(){
   },300);
 }
 
-// round();
+round();
 
 function movesF(){
   if(!eatCandy){//没吃糖
@@ -144,9 +147,6 @@ function movesF(){
     moves.unshift(moves[0]);
   }
 }
-
-
-
 function validate(str){
 
 }
@@ -205,7 +205,9 @@ function draw(){
   var canvas = document.getElementById("canvas");
   if (canvas.getContext){
     var ctx = canvas.getContext('2d');
-    ctx.clearRect(0,0,200,600);
+    var width = $('#canvas').width();
+    var height = $('#canvas').height();
+    ctx.clearRect(0,0,width,height);
     for (var i = 0; i < points.length; i++) {
       ctx.strokeStyle="#000000";
       ctx.strokeRect(points[i][0]*per,points[i][1]*per,per,per);
