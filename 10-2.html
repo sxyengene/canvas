@@ -1,0 +1,416 @@
+<html>
+  <meta charset="utf-8">
+ <head>
+ <style type="text/css">
+ #canvas{
+ 	border:1px solid #000;
+  margin-left: 200px;
+ }
+ </style>
+ <script src="jquery.js"></script>
+ </head>
+ <body >
+   <canvas id="canvas" width="300" height="300"></canvas>
+   <style>
+   div{
+    width: 50px;
+    height: 50px;
+    
+   }
+  .up{
+    position: absolute;
+    left: 50px;
+    top: 0;
+    background-color: red;
+  }.down{
+    position: absolute;
+    left: 50px;
+    top: 50px;
+    background: blue;
+  }.left{
+    position: absolute;
+    left: 0px;
+    top: 50px;
+    background: yellow;
+  }.right{
+    position: absolute;
+    left: 100px;
+    top: 50px;
+    background: black;
+  }
+  .stop{
+    position: absolute;
+    left: 100px;
+    top: 250px;
+    background: red;
+  }
+  .start{
+    position: absolute;
+    left: 100px;
+    top: 200px;
+    background: green;
+  }
+  .showlength{
+    position: absolute;
+    left: 100px;
+    top: 300px;
+    background: purple;
+    line-height: 50px;
+    text-align: center;
+    color: red;
+    width: 100px;
+  }
+  .showmaxlength{
+    position: absolute;
+    left: 100px;
+    top: 350px;
+    background: purple;
+    line-height: 50px;
+    text-align: center;
+    color: red;
+    width: 100px;
+  }
+   .save{
+    position: absolute;
+    left: 100px;
+    top: 400px;
+    background: aliceblue;
+  }
+  .clear{
+    position: absolute;
+    left: 100px;
+    top: 450px;
+    background: aliceblue;
+    background-color:chartreuse;
+  }
+  .speedup{
+    position: absolute;
+    left: 50px;
+    top: 400px;
+    background: aliceblue;
+    background-color:chartreuse;
+  }
+  .speeddown{
+    position: absolute;
+    left: 50px;
+    top: 450px;
+    background: aliceblue;
+    background-color:chartreuse;
+  }
+
+
+   </style>
+   <div class="up"></div>
+   <div class="down"></div>
+   <div class="left"></div>
+   <div class="right"></div>
+   <div class="stop">stop</div>
+   <div class="start">start</div>
+   <div class="showlength">现在长度<span></span></div>
+   <div class="showmaxlength">历史最高<span></span></div>
+   <div class="save">按S保存</div>
+   <div class="clear">clear</div>
+   <div class="speedup">按q加速</div>
+   <div class="speeddown">按w减速</div>
+  
+   <script type="application/x-javascript">
+var width = $('#canvas').width();
+var nextMove = '';
+var moveFlag = 0;
+var per=20;
+var eatCandy = false;//是否吃糖
+
+var border = (width / per)-1;//边界
+var broad = [border,border];
+var points;
+var candy = [[4,4]];
+var moves = ['addX','addX','addX'];
+var time = 500;
+if(localStorage && JSON){
+  var tempPoints = JSON.parse(localStorage.getItem("sxycanvaspoints"));
+  if(tempPoints!=null){
+    points = tempPoints;
+  }else{
+    points = [
+      [2,1],
+      [1,1],
+      [0,1]
+    ];
+  }
+  var tempcandy = JSON.parse(localStorage.getItem("sxycanvascandy"));
+  if(tempcandy!=null){
+    candy = tempcandy;
+  }
+  var tempmoves = JSON.parse(localStorage.getItem("sxycanvasmoves"));
+  if(tempmoves!=null){
+    moves = tempmoves;
+  }
+
+  var tempmaxlength = localStorage.getItem("sxycanvasmaxlength");
+  if(tempmaxlength==null){
+    $('.showmaxlength span').text('0');
+  }else{
+    $('.showmaxlength span').text(tempmaxlength);
+  }
+
+  var temptime = localStorage.getItem("sxycanvastime");
+  if(temptime!=null){
+    time = +temptime;
+  }
+}
+
+
+
+
+var stopFlag = true;
+
+
+function makeCandy(){
+  if(candy.length>5){
+    return;
+  }
+  var x = Math.ceil(Math.random()*border);
+  var y = Math.ceil(Math.random()*border);
+  var canPushFlag = 1;
+  var arr = [x,y];
+  for (var i = 0; i < points.length; i++) {
+    if(points[i][0] == x && points[i][1] == y){
+      canPushFlag = 0;
+    }
+  }
+  for (var i = 0; i < candy.length; i++) {
+    if(candy[i][0] == x && candy[i][1] == y){
+      canPushFlag = 0;
+    }
+  }
+
+  if(canPushFlag){
+    candy.push([x,y]);
+  }
+}
+
+function isInCandy(arr){
+  var inCandy = false;
+   for (var i = 0; i < candy.length; i++) {
+    if(candy[i][0] == arr[0] && candy[i][1] == arr[1]){
+      inCandy = true;
+      candy.splice(i,1);
+    }
+  }
+  return inCandy;
+}
+
+var action = {
+    addX:function(arr){
+      var newVar =  ++arr[0];
+      return [newVar > border ? 0 : newVar,arr[1]];
+    },
+    reduceX:function(arr){
+      var newVar =  --arr[0];
+      return [newVar < 0 ? border : newVar,arr[1]];
+    },
+    addY:function(arr){
+      var newVar =  ++arr[1];
+      return [arr[0], newVar > border ? 0 : newVar ];
+    },
+    reduceY:function(arr){
+      var newVar =  --arr[1];
+      return [arr[0],newVar < 0 ? border : newVar];
+    }
+}
+
+
+
+
+var tt;
+function round(){
+  //到某一时刻的一瞬间，判断此时有效的行为。无特殊行为则复制上一行为。up,down,left,right
+  //然后移动snake
+  //判断，目标点 是否存在 candy 或者 禁区 或者本身
+  //如果是candy 则跳过pop一步。
+  movesF();
+  var lastarr = [points[points.length - 1][0],points[points.length - 1][1]];
+  for(var i = 0;i < points.length;i++){
+    points[i] = action[moves[i]](points[i]);
+  }
+  if(isInCandy(points[0])){
+    eatCandy = true;//吃了一个糖
+  }
+  if(eatCandy){
+    points.push(lastarr);
+  }
+  eatTail();
+  draw();
+  showLength();
+
+  tt = setTimeout(function(){
+    if(stopFlag){
+      return;
+    }
+    round();
+    if(tt % 5 ==0){
+      makeCandy();
+    }
+  },time);
+}
+
+function movesF(){
+  if(!eatCandy){//没吃糖
+    moves.pop();
+  }else{//吃了糖
+    eatCandy = false;
+  }
+  if(moveFlag){
+    moves.unshift(nextMove);
+    moveFlag=0;
+  }else{
+    moves.unshift(moves[0]);
+  }
+}
+
+function eatTail(){
+   for (var i = 1; i < points.length; i++) {
+    if(points[i][0] == points[0][0] && points[i][1] == points[0][1]){
+      points.splice(i,points.length - i +1);
+    }
+  }
+}
+
+function showLength(){
+  $('.showlength span').text(points.length);
+  var maxlenth = +$('.showmaxlength span').text();
+  if(points.length > maxlenth){
+    $('.showmaxlength span').text(points.length);
+  }
+}
+
+
+$('div').click(function(event) {
+  var ele = event.currentTarget;
+  if($(ele).hasClass('up')){
+    if(moves[0] != 'addY'){
+      nextMove = 'reduceY';
+      moveFlag = 1;
+    }
+  }else if($(ele).hasClass('down')){
+    if(moves[0] != 'reduceY'){
+      nextMove = 'addY';
+      moveFlag = 1;
+    }
+  }else if($(ele).hasClass('left')){
+    if(moves[0] != 'addX'){
+      nextMove = 'reduceX';
+      moveFlag = 1;
+    }
+  }else if($(ele).hasClass('right')){
+    if(moves[0] != 'reduceX'){
+      nextMove = 'addX';
+      moveFlag = 1;
+    }
+  }else{
+    moveFlag = 0;
+  }
+  // round();
+});
+
+$(document).keydown(function(e) {
+  e=window.event||e;
+  switch(e.which){
+    case 32: //暂停
+      if(stopFlag){
+        $('.start').trigger('click');
+      }else{
+        $('.stop').trigger('click');
+      }
+      break;
+    case 37: //左键
+      $('.left').trigger('click');
+      break;
+    case 38: //向上键
+      $('.up').trigger('click');
+      break;
+    case 39: //右键
+      $('.right').trigger('click');
+      break;
+    case 40: //向下键
+      $('.down').trigger('click');
+      break;
+    case 81: //加速
+      $('.speedup').trigger('click');
+      break;
+    case 83: //保存
+      $('.save').trigger('click');
+      break;
+    case 87: //减速
+      $('.speeddown').trigger('click');
+      break;
+    default:
+      break;
+  }
+});
+
+$('.start').click(function(event) {
+  if(stopFlag){
+    round();
+    stopFlag = false;  
+  }
+});
+
+$('.stop').click(function(event) {
+  stopFlag = true;
+});
+
+$('.save').click(function(event) {
+  if(localStorage && JSON){
+    localStorage.setItem("sxycanvaspoints",JSON.stringify(points));
+    localStorage.setItem("sxycanvascandy",JSON.stringify(candy));
+    localStorage.setItem("sxycanvasmoves",JSON.stringify(moves));
+    localStorage.setItem("sxycanvasmaxlength",$('.showmaxlength span').text());
+    localStorage.setItem("sxycanvastime",time);
+  }
+});
+
+$('.clear').click(function(event) {
+  if(localStorage && JSON){
+    localStorage.removeItem("sxycanvaspoints");
+    localStorage.removeItem("sxycanvascandy");
+    localStorage.removeItem("sxycanvasmoves");
+    localStorage.removeItem("sxycanvasmaxlength");
+    localStorage.removeItem("sxycanvastime");
+  }
+});
+
+$('.speedup').click(function(event) {
+  if(time > 50){
+    time = time -50;
+  }
+});
+
+$('.speeddown').click(function(event) {
+  if(time < 800){
+    time = time +100;
+  }
+});
+
+function draw(){
+  var canvas = document.getElementById("canvas");
+  if (canvas.getContext){
+    var ctx = canvas.getContext('2d');
+    var width = $('#canvas').width();
+    var height = $('#canvas').height();
+    ctx.clearRect(0,0,width,height);
+    for (var i = 0; i < points.length; i++) {
+      ctx.strokeStyle="#000000";
+      ctx.strokeRect(points[i][0]*per,points[i][1]*per,per,per);
+    }
+    for (var i = 0; i < candy.length; i++) {
+      ctx.strokeStyle="#FF0000";
+      ctx.strokeRect(candy[i][0]*per,candy[i][1]*per,per,per);
+    }
+  }
+}
+
+
+  </script>
+ </body>
+</html>

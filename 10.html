@@ -1,4 +1,5 @@
 <html>
+  <meta charset="utf-8">
  <head>
  <style type="text/css">
  #canvas{
@@ -9,7 +10,7 @@
  <script src="jquery.js"></script>
  </head>
  <body >
-   <canvas id="canvas" width="600" height="600"></canvas>
+   <canvas id="canvas" width="300" height="300"></canvas>
    <style>
    div{
     width: 50px;
@@ -49,6 +50,55 @@
     top: 200px;
     background: green;
   }
+  .showlength{
+    position: absolute;
+    left: 100px;
+    top: 300px;
+    background: purple;
+    line-height: 50px;
+    text-align: center;
+    color: red;
+    width: 100px;
+  }
+  .showmaxlength{
+    position: absolute;
+    left: 100px;
+    top: 350px;
+    background: purple;
+    line-height: 50px;
+    text-align: center;
+    color: red;
+    width: 100px;
+  }
+   .save{
+    position: absolute;
+    left: 100px;
+    top: 400px;
+    background: aliceblue;
+  }
+  .clear{
+    position: absolute;
+    left: 100px;
+    top: 450px;
+    background: aliceblue;
+    background-color:chartreuse;
+  }
+  .speedup{
+    position: absolute;
+    left: 50px;
+    top: 400px;
+    background: aliceblue;
+    background-color:chartreuse;
+  }
+  .speeddown{
+    position: absolute;
+    left: 50px;
+    top: 450px;
+    background: aliceblue;
+    background-color:chartreuse;
+  }
+
+
    </style>
    <div class="up"></div>
    <div class="down"></div>
@@ -56,17 +106,61 @@
    <div class="right"></div>
    <div class="stop">stop</div>
    <div class="start">start</div>
+   <div class="showlength">现在长度<span></span></div>
+   <div class="showmaxlength">历史最高<span></span></div>
+   <div class="save">按S保存</div>
+   <div class="clear">clear</div>
+   <div class="speedup">按q加速</div>
+   <div class="speeddown">按w减速</div>
   
    <script type="application/x-javascript">
-var border = 29;//边界
+var width = $('#canvas').width();
+var nextMove = '';
+var moveFlag = 0;
+var per=20;
+var eatCandy = false;//是否吃糖
+
+var border = (width / per)-1;//边界
 var broad = [border,border];
-var points = [
-  [2,1],
-  [1,1],
-  [0,1]
-];
-var moves = ['addX','addX','addX'];
+var points;
 var candy = [[4,4]];
+var moves = ['addX','addX','addX'];
+var time = 500;
+if(localStorage && JSON){
+  var tempPoints = JSON.parse(localStorage.getItem("sxycanvaspoints"));
+  if(tempPoints!=null){
+    points = tempPoints;
+  }else{
+    points = [
+      [2,1],
+      [1,1],
+      [0,1]
+    ];
+  }
+  var tempcandy = JSON.parse(localStorage.getItem("sxycanvascandy"));
+  if(tempcandy!=null){
+    candy = tempcandy;
+  }
+  var tempmoves = JSON.parse(localStorage.getItem("sxycanvasmoves"));
+  if(tempmoves!=null){
+    moves = tempmoves;
+  }
+
+  var tempmaxlength = localStorage.getItem("sxycanvasmaxlength");
+  if(tempmaxlength==null){
+    $('.showmaxlength span').text('0');
+  }else{
+    $('.showmaxlength span').text(tempmaxlength);
+  }
+
+  var temptime = localStorage.getItem("sxycanvastime");
+  if(temptime!=null){
+    time = +temptime;
+  }
+}
+
+
+
 
 var stopFlag = true;
 
@@ -81,6 +175,11 @@ function makeCandy(){
   var arr = [x,y];
   for (var i = 0; i < points.length; i++) {
     if(points[i][0] == x && points[i][1] == y){
+      canPushFlag = 0;
+    }
+  }
+  for (var i = 0; i < candy.length; i++) {
+    if(candy[i][0] == x && candy[i][1] == y){
       canPushFlag = 0;
     }
   }
@@ -103,23 +202,24 @@ function isInCandy(arr){
 
 var action = {
     addX:function(arr){
-      return [++arr[0],arr[1]];
+      var newVar =  ++arr[0];
+      return [newVar > border ? 0 : newVar,arr[1]];
     },
     reduceX:function(arr){
-      return [--arr[0],arr[1]];
+      var newVar =  --arr[0];
+      return [newVar < 0 ? border : newVar,arr[1]];
     },
     addY:function(arr){
-      return [arr[0],++arr[1]];
+      var newVar =  ++arr[1];
+      return [arr[0], newVar > border ? 0 : newVar ];
     },
     reduceY:function(arr){
-      return [arr[0],--arr[1]];
+      var newVar =  --arr[1];
+      return [arr[0],newVar < 0 ? border : newVar];
     }
 }
 
-var nextMove = '';
-var moveFlag = 0;
-var per=20;
-var eatCandy = false;//是否吃糖
+
 
 
 var tt;
@@ -139,7 +239,9 @@ function round(){
   if(eatCandy){
     points.push(lastarr);
   }
+  eatTail();
   draw();
+  showLength();
 
   tt = setTimeout(function(){
     if(stopFlag){
@@ -149,7 +251,7 @@ function round(){
     if(tt % 5 ==0){
       makeCandy();
     }
-  },300);
+  },time);
 }
 
 function movesF(){
@@ -165,8 +267,21 @@ function movesF(){
     moves.unshift(moves[0]);
   }
 }
-function validate(str){
 
+function eatTail(){
+   for (var i = 1; i < points.length; i++) {
+    if(points[i][0] == points[0][0] && points[i][1] == points[0][1]){
+      points.splice(i,points.length - i +1);
+    }
+  }
+}
+
+function showLength(){
+  $('.showlength span').text(points.length);
+  var maxlenth = +$('.showmaxlength span').text();
+  if(points.length > maxlenth){
+    $('.showmaxlength span').text(points.length);
+  }
 }
 
 
@@ -220,6 +335,15 @@ $(document).keydown(function(e) {
     case 40: //向下键
       $('.down').trigger('click');
       break;
+    case 81: //加速
+      $('.speedup').trigger('click');
+      break;
+    case 83: //保存
+      $('.save').trigger('click');
+      break;
+    case 87: //减速
+      $('.speeddown').trigger('click');
+      break;
     default:
       break;
   }
@@ -234,6 +358,38 @@ $('.start').click(function(event) {
 
 $('.stop').click(function(event) {
   stopFlag = true;
+});
+
+$('.save').click(function(event) {
+  if(localStorage && JSON){
+    localStorage.setItem("sxycanvaspoints",JSON.stringify(points));
+    localStorage.setItem("sxycanvascandy",JSON.stringify(candy));
+    localStorage.setItem("sxycanvasmoves",JSON.stringify(moves));
+    localStorage.setItem("sxycanvasmaxlength",$('.showmaxlength span').text());
+    localStorage.setItem("sxycanvastime",time);
+  }
+});
+
+$('.clear').click(function(event) {
+  if(localStorage && JSON){
+    localStorage.removeItem("sxycanvaspoints");
+    localStorage.removeItem("sxycanvascandy");
+    localStorage.removeItem("sxycanvasmoves");
+    localStorage.removeItem("sxycanvasmaxlength");
+    localStorage.removeItem("sxycanvastime");
+  }
+});
+
+$('.speedup').click(function(event) {
+  if(time > 50){
+    time = time -50;
+  }
+});
+
+$('.speeddown').click(function(event) {
+  if(time < 800){
+    time = time +100;
+  }
 });
 
 function draw(){
