@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Document</title>
+</head>
+<body>
+	<input id="file" type="file">
+	<button id="button">转</button>
+	<canvas id="c"></canvas>
+<script>
+var canvas = document.getElementById('c');
+var button = document.getElementById('button');
+var file = document.getElementById('file');
+var ctx = canvas.getContext("2d");
+
+
+button.addEventListener('click', function(e){
+	var fr = new FileReader();
+	fr.onloadend = function(e){
+		console.log(e.target.result);
+	}
+	fr.readAsDataURL(file.files[0]);
+	
+	// ctx.drawImage(image, dx, dy[, dw][, dh])
+}, false);
+
+</script>
+</body>
+</html>
